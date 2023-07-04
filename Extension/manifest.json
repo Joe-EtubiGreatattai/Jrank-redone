@@ -1,0 +1,28 @@
+{
+    "manifest_version": 2,
+    "name": "Google Scholar Results",
+    "version": "1.0",
+    "description": "Jrankii",
+    "browser_action": {
+      "default_popup": "popup.html",
+      "default_icon": "icons/icon.png"
+    },
+    "permissions": [
+      "history",
+      "tabs",
+      "http://*/*",
+      "https://*/*"
+    ],
+    "content_scripts": [
+      {
+        "matches": ["https://scholar.google.com/*"],
+        "js": ["contentScript.js"]
+      }
+    ],
+    "icons": {
+      "16": "icons/icon.png",
+      "48": "icons/icon.png",
+      "128": "icons/icon.png"
+    }
+  }
+  
