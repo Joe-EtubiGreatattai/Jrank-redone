@@ -23,29 +23,31 @@ document.addEventListener("DOMContentLoaded", function () {
             // Assign the fetched results to the variable
             fetchedResults = results;
 
-            // Continue with the remaining code to calculate similarity
+            // Continue with the remaining code to format browser history and calculate similarity
             chrome.history.search(
               { text: "", maxResults: 1000, startTime: 0, endTime: Date.now() },
               function (historyItems) {
                 if (historyItems.length > 0) {
-                  var formattedHistory = formatBrowserHistory(historyItems);
-                  console.log("Browser History:", formattedHistory);
+                  // Format the browser history
+                  formatBrowserHistory(historyItems, function (formattedHistory) {
+                    console.log("Browser History:", formattedHistory);
 
-                  // Apply the RankMaster algorithm to the results
-                  var rankedResults = applyRankMasterAlgorithm(
-                    fetchedResults,
-                    formattedHistory
-                  );
-                  console.log("Ranked Results:", rankedResults);
+                    // Apply the RankMaster algorithm to the results
+                    var rankedResults = applyRankMasterAlgorithm(
+                      fetchedResults,
+                      formattedHistory
+                    );
+                    console.log("Ranked Results:", rankedResults);
 
-                  displayRankedResults(rankedResults);
+                    displayRankedResults(rankedResults);
 
-                  // Calculate and display the similarity
-                  var similarity = calculateSimilarity(
-                    fetchedResults,
-                    rankedResults
-                  );
-                  console.log("Similarity:", similarity);
+                    // Calculate and display the similarity
+                    var similarity = calculateSimilarity(
+                      fetchedResults,
+                      rankedResults
+                    );
+                    console.log("Similarity:", similarity);
+                  });
                 } else {
                   console.log("No browser history data available.");
                 }
@@ -89,22 +91,33 @@ function fetchGoogleScholarResults(tab, query, callback) {
   });
 }
 
-function formatBrowserHistory(historyItems) {
+function formatBrowserHistory(historyItems, callback) {
   var formattedHistory = [];
 
-  historyItems.forEach(function (item) {
+  function processHistoryItem(index) {
+    if (index >= historyItems.length) {
+      callback(formattedHistory);
+      return;
+    }
+
+    var item = historyItems[index];
     var formattedItem = {
       url: item.url,
       timestamp: formatTimestamp(item.lastVisitTime),
       frequency: item.visitCount,
       queries: extractSearchQueries(item.url),
-      bookmarked: item.bookmarked,
+      bookmarked: false, // Initialize bookmarked as false
     };
 
-    formattedHistory.push(formattedItem);
-  });
+    // Check if the URL is bookmarked
+    isBookmarked(item.url, function (bookmarked) {
+      formattedItem.bookmarked = bookmarked;
+      formattedHistory.push(formattedItem);
+      processHistoryItem(index + 1);
+    });
+  }
 
-  return formattedHistory;
+  processHistoryItem(0);
 }
 
 function formatTimestamp(timestamp) {
@@ -213,6 +226,7 @@ function applyRankMasterAlgorithm(results, browserHistory) {
 
 function displayRankedResults(results) {
   var resultsList = document.getElementById("results-list");
+  resultsList.innerHTML = ''; // Clear previous results
 
   results.forEach(function (result) {
     var listItem = document.createElement("li");
@@ -263,4 +277,10 @@ function calculateSimilarity(results, rankedResults) {
 
   const similarity = (totalMatch / totalEntries) * 100;
   return similarity + "%";
+}
+
+function isBookmarked(url, callback) {
+  chrome.bookmarks.search({ url: url }, function (bookmarks) {
+    callback(bookmarks.length > 0);
+  });
 }

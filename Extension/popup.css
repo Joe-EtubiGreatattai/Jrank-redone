@@ -33,7 +33,8 @@ ul {
 }
 
 #qeryHolder{
-  margin-bottom: 1rem;
+  margin-bottom: 1rem; 
+  color: purple;
 }
 
 ul::-webkit-scrollbar {
@@ -47,6 +48,8 @@ li {
   background: purple;
   color: #fff;
 }
+
+
 
 a {
   color: #eee;
